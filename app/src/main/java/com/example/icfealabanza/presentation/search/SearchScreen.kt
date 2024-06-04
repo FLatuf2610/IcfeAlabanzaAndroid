@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,8 +60,11 @@ import kotlinx.coroutines.Dispatchers
 fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController) {
     val state by viewModel.state.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
-    val bottomSheetState = rememberBottomSheetScaffoldState()
-    val scope = rememberCoroutineScope()
+    val lazyListState = rememberLazyListState()
+    val keyboardController = LocalSoftwareKeyboardController.current
+    LaunchedEffect(key1 = lazyListState.isScrollInProgress) {
+       if (lazyListState.isScrollInProgress) keyboardController?.hide()
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -80,7 +86,9 @@ fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController) {
             placeholder = { Text(text = "Buscar...") }
         ) {
             if (state.albums.isNotEmpty() || state.artists.isNotEmpty() || state.songs.isNotEmpty()) {
-                LazyColumn {
+                LazyColumn(
+                    state = lazyListState
+                ) {
                     if (state.songs.isNotEmpty()) {
                         item {
                             Text(
