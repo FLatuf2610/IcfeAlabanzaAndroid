@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 
 data class AlbumsFromArtistResponse(
     @SerializedName("data")
-    val data: List<SongFromAlbumArtistDto>,
+    val data: List<AlbumDto>,
     @SerializedName("next")
     val next: String,
     @SerializedName("total")

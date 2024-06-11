@@ -1,6 +1,7 @@
 package com.example.icfealabanza.data.network.dto.artist_top_songs
 
 
+import com.example.icfealabanza.domain.models.SongListItem
 import com.google.gson.annotations.SerializedName
 
 data class ArtistsTopSongsSongDto(
@@ -39,3 +40,6 @@ data class ArtistsTopSongsSongDto(
     @SerializedName("type")
     val type: String
 )
+fun ArtistsTopSongsSongDto.toListItem(): SongListItem {
+    return SongListItem(id, title, album.coverMedium, artist.name, preview)
+}

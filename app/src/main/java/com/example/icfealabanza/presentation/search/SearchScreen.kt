@@ -18,26 +18,19 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,33 +46,38 @@ import coil.request.ImageRequest
 import com.example.icfealabanza.domain.models.AlbumListItem
 import com.example.icfealabanza.domain.models.ArtistListItem
 import com.example.icfealabanza.domain.models.SongListItem
+import com.example.icfealabanza.presentation.main.MainViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController) {
+fun SearchScreen(viewModel: SearchViewModel, mainViewModel: MainViewModel, navController: NavHostController) {
     val state by viewModel.state.collectAsState()
-    var query by rememberSaveable { mutableStateOf("") }
     val lazyListState = rememberLazyListState()
     val keyboardController = LocalSoftwareKeyboardController.current
     LaunchedEffect(key1 = lazyListState.isScrollInProgress) {
-       if (lazyListState.isScrollInProgress) keyboardController?.hide()
+        if (lazyListState.isScrollInProgress) keyboardController?.hide()
     }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
         SearchBar(
-            query = query,
+            query = viewModel.query,
             onQueryChange = {
-                query = it
+                viewModel.query = it
                 viewModel.search(it)
             },
             onSearch = {},
             active = true,
             onActiveChange = {},
             leadingIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
+                IconButton(onClick = {
+                    keyboardController?.hide()
+                    navController.popBackStack()
+                }) {
                     Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
                 }
             },
@@ -100,8 +98,10 @@ fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController) {
                         songList(
                             list = state.songs,
                             isLoading = viewModel.isLoadingSongs,
-                            onButtonClick = { idx -> viewModel.loadMoreSongs(query, idx) },
-                            onClick = { viewModel.onSongClick(it) })
+                            onButtonClick = { idx -> viewModel.loadMoreSongs(viewModel.query, idx) },
+                            onClick = {
+                                keyboardController?.hide()
+                                    mainViewModel.onSongClick(it) })
                     }
                     if (state.artists.isNotEmpty()) {
                         item {
@@ -114,8 +114,11 @@ fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController) {
                         artistsList(
                             list = state.artists,
                             isLoading = viewModel.isLoadingArtists,
-                            onButtonClick = { idx -> viewModel.loadMoreArtists(query, idx) },
-                            onClick = { }
+                            onButtonClick = { idx -> viewModel.loadMoreArtists(viewModel.query, idx) },
+                            onClick = {
+                                keyboardController?.hide()
+                                navController.navigate("artist_detail/$it")
+                            }
                         )
                     }
                     if (state.albums.isNotEmpty()) {
@@ -129,12 +132,11 @@ fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController) {
                         albumsList(
                             list = state.albums,
                             isLoading = viewModel.isLoadingAlbums,
-                            onButtonClick = { idx -> viewModel.loadMoreAlbums(query, idx) },
-                            onClick = { navController }
+                            onButtonClick = { idx -> viewModel.loadMoreAlbums(viewModel.query, idx) },
+                            onClick = {  }
                         )
                     }
-
-
+                    item { Spacer(modifier = Modifier.height(92.dp)) }
                 }
             } else {
                 Column(
@@ -157,12 +159,7 @@ fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController) {
                 }
             }
         }
-        if (viewModel.isBottomSheetVisible) {
-            ModalBottomSheet(onDismissRequest = { viewModel.hideBottomSheet() }) {
-                BottomSheetContent(songListItem = viewModel.selectedItem, webViewLyrics = {}, webViewNotes = {}) { }
 
-            }
-        }
 
     }
 }
@@ -266,7 +263,7 @@ fun SearchListItem(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
+            .clip(RoundedCornerShape(17)),
         onClick = { onClick(id) }
     ) {
         Row(
@@ -284,7 +281,7 @@ fun SearchListItem(
                 contentDescription = "",
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(17))
             )
             Spacer(modifier = Modifier.width(8.dp))
             Column(
@@ -303,79 +300,5 @@ fun SearchListItem(
     }
 }
 
-@Composable
-fun BottomSheetContent(
-    songListItem: SongListItem?,
-    webViewLyrics: (SongListItem) -> Unit,
-    webViewNotes: (SongListItem) -> Unit,
-    detail: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(0.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(songListItem?.coverSmall ?: "")
-                    .dispatcher(Dispatchers.IO)
-                    .crossfade(true)
-                    .placeholder(null)
-                    .build(),
-                contentDescription = "",
-                modifier = Modifier
-                    .size(54.dp)
-                    .clip(RoundedCornerShape(16.dp))
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = songListItem?.title ?: "",
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (songListItem?.artist?.isNotBlank()!!)
-                    Text(text = songListItem.artist, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-        }
-        Surface(
-            onClick = { detail(songListItem!!.id) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row {
-                Icon(imageVector = Icons.Default.Info, contentDescription = "")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Ir a detalle")
-            }
-        }
 
-        Surface(
-            onClick = { webViewLyrics(songListItem!!) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Buscar letra")
-            }
-        }
 
-        Surface(
-            onClick = { webViewNotes(songListItem!!) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Buscar Notas")
-            }
-        }
-
-    }
-}

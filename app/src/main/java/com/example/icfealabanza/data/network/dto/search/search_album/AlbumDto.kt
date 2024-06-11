@@ -40,4 +40,4 @@ data class AlbumDto(
 )
 
 fun AlbumDto.toItemList(): AlbumListItem =
-    AlbumListItem(id, title, coverSmall, artist.name)
+    AlbumListItem(id, title, coverSmall, artist.name,"")

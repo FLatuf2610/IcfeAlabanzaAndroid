@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.icfealabanza.domain.models.SongListItem
 import com.example.icfealabanza.domain.use_cases.SearchAlbumUseCase
 import com.example.icfealabanza.domain.use_cases.SearchArtistsUseCase
 import com.example.icfealabanza.domain.use_cases.SearchSongsUseCase
@@ -22,7 +21,7 @@ class SearchViewModel @Inject constructor(
     private val searchSongsUseCase: SearchSongsUseCase,
     private val searchArtistsUseCase: SearchArtistsUseCase,
     private val searchAlbumUseCase: SearchAlbumUseCase
-): ViewModel() {
+) : ViewModel() {
 
     var state = MutableStateFlow(SearchState())
         private set
@@ -34,19 +33,7 @@ class SearchViewModel @Inject constructor(
 
     private var searchJob: Job? = null
 
-    var selectedItem by mutableStateOf<SongListItem?>(null)
-        private set
-    var isBottomSheetVisible by mutableStateOf(false)
-        private set
-    fun onSongClick(song: SongListItem) {
-        selectedItem = song
-        isBottomSheetVisible = true
-    }
-
-    fun hideBottomSheet() {
-        isBottomSheetVisible = false
-        selectedItem = null
-    }
+    var query by mutableStateOf("")
 
     fun search(query: String) {
         isLoading = false
@@ -82,6 +69,7 @@ class SearchViewModel @Inject constructor(
             isLoadingSongs = false
         }
     }
+
     fun loadMoreAlbums(query: String, index: Int) {
         viewModelScope.launch {
             isLoadingAlbums = true
@@ -93,6 +81,7 @@ class SearchViewModel @Inject constructor(
             isLoadingAlbums = false
         }
     }
+
     fun loadMoreArtists(query: String, index: Int) {
         viewModelScope.launch {
             isLoadingArtists = true
@@ -104,4 +93,5 @@ class SearchViewModel @Inject constructor(
             isLoadingArtists = false
         }
     }
+
 }

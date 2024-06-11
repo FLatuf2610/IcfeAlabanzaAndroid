@@ -28,7 +28,9 @@ interface IcfeRepository {
 
 
     suspend fun getAlbumsFromArtist(
-        id: String
+        id: String,
+        limit: Int = 10,
+        index: Int = 0
     ): Result<AlbumsFromArtistResponse>
 
 

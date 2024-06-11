@@ -1,6 +1,7 @@
 package com.example.icfealabanza.data.network.dto.by_id.artist_by_id
 
 
+import com.example.icfealabanza.domain.models.ArtistListItem
 import com.google.gson.annotations.SerializedName
 
 data class ArtistByIdDto(
@@ -33,3 +34,6 @@ data class ArtistByIdDto(
     @SerializedName("type")
     val type: String
 )
+fun ArtistByIdDto.toListItem(): ArtistListItem {
+    return ArtistListItem(id, name, pictureMedium)
+}

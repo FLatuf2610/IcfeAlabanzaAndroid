@@ -46,8 +46,11 @@ class IcfeRepositoryImpl @Inject constructor(private val apiClient: DeezerApiCli
         return safeApiCall { apiClient.getArtistById(id) }
     }
 
-    override suspend fun getAlbumsFromArtist(id: String): Result<AlbumsFromArtistResponse> {
-        return safeApiCall { apiClient.getAlbumsFromArtist(id) }
+    override suspend fun getAlbumsFromArtist(
+        id: String,
+        limit: Int,
+        index: Int): Result<AlbumsFromArtistResponse> {
+        return safeApiCall { apiClient.getAlbumsFromArtist(id, limit, index) }
     }
 
     override suspend fun getArtistsTopSongs(

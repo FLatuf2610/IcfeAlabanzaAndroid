@@ -1,9 +1,10 @@
 package com.example.icfealabanza.data.network.dto.album_from_artist
 
 
+import com.example.icfealabanza.domain.models.AlbumListItem
 import com.google.gson.annotations.SerializedName
 
-data class SongFromAlbumArtistDto(
+data class AlbumDto(
     @SerializedName("cover")
     val cover: String,
     @SerializedName("cover_big")
@@ -37,3 +38,7 @@ data class SongFromAlbumArtistDto(
     @SerializedName("type")
     val type: String
 )
+fun AlbumDto.toListItem(): AlbumListItem {
+    val releaseDate = releaseDate.split("-")
+    return AlbumListItem(id, title, coverMedium, "", releaseDate[0])
+}
