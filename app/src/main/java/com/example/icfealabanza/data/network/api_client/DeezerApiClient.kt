@@ -6,7 +6,6 @@ import com.example.icfealabanza.data.network.dto.by_id.album_by_id.AlbumByIdDto
 import com.example.icfealabanza.data.network.dto.by_id.artist_by_id.ArtistByIdDto
 import com.example.icfealabanza.data.network.dto.search.search_artist.SearchArtistResponse
 import com.example.icfealabanza.data.network.dto.search.search_song.SearchSongResponse
-import com.example.icfealabanza.data.network.dto.by_id.song_by_id.SongByIdDto
 import com.example.icfealabanza.data.network.dto.related_artists.RelatedArtistsResponse
 import com.example.icfealabanza.data.network.dto.search.search_album.SearchAlbumResponse
 import retrofit2.Response
@@ -20,10 +19,6 @@ interface DeezerApiClient {
         @Path("id") id: String
     ): Response<AlbumByIdDto>
 
-    @GET("track/{id}")
-    suspend fun getSongById(
-        @Path("id") id: String
-    ): Response<SongByIdDto>
 
     @GET("artist/{id}")
     suspend fun getArtistById(

@@ -30,7 +30,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,8 +47,6 @@ import com.example.icfealabanza.domain.models.ArtistListItem
 import com.example.icfealabanza.domain.models.SongListItem
 import com.example.icfealabanza.presentation.main.MainViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +73,7 @@ fun SearchScreen(viewModel: SearchViewModel, mainViewModel: MainViewModel, navCo
             leadingIcon = {
                 IconButton(onClick = {
                     keyboardController?.hide()
-                    navController.popBackStack()
+                    navController.navigateUp()
                 }) {
                     Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
                 }

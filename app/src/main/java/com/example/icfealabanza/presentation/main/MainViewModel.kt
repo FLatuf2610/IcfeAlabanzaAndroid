@@ -1,7 +1,10 @@
 package com.example.icfealabanza.presentation.main
 
+import android.content.Context
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,8 +12,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.icfealabanza.common.constants.LYRICS_MODE
-import com.example.icfealabanza.common.constants.NOTES_MODE
 import com.example.icfealabanza.domain.models.SongListItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -91,16 +92,16 @@ class MainViewModel @Inject constructor() : ViewModel() {
         val title = song.title.replace(" ", "+")
         val artist = song.artist.replace(" ", "+")
         val query = "$title+$artist"
-        val mode = LYRICS_MODE
-        navController.navigate("web_view/$query/$mode")
+        navController.navigate("web_view/$query")
     }
 
-    fun navigateToNotes(song: SongListItem, navController: NavController) {
+    fun navigateToNotes(song: SongListItem, context: Context) {
         val title = song.title.replace(" ", "+")
         val artist = song.artist.replace(" ", "+")
         val query = "$title+$artist"
-        val mode = NOTES_MODE
-        navController.navigate("web_view/$query/$mode")
+        val url = "https://www.google.com/search?q=$query+notas"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(intent)
     }
 
 }

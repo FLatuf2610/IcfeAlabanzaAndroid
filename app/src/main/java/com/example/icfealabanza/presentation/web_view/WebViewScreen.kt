@@ -3,7 +3,6 @@ package com.example.icfealabanza.presentation.web_view
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
-import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Box
@@ -23,22 +22,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
-import com.example.icfealabanza.common.constants.LYRICS_MODE
-import com.example.icfealabanza.common.constants.NOTES_MODE
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WebViewScreen(navController: NavController, query: String, mode: String) {
+fun WebViewScreen(navController: NavController, query: String) {
     val context = LocalContext.current
-    val url = if (mode == LYRICS_MODE) "https://www.google.com/search?q=$query+letra"
-        else "https://www.google.com/search?q=$query+notas"
-
+    val url = "https://www.google.com/search?q=$query+letra"
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(text = "") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.navigateUp() }) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "")
                     }
                 }
@@ -62,6 +57,8 @@ fun WebViewComponent(context: Context, url: String) {
     val webView = remember {
         WebView(context).apply {
             settings.javaScriptEnabled = true
+            settings.javaScriptCanOpenWindowsAutomatically = true
+            settings.loadWithOverviewMode = true
             webViewClient = WebViewClient()
             Log.i("URL", url)
             loadUrl(url)

@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +51,8 @@ import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.icfealabanza.domain.models.SongListItem
+import com.example.icfealabanza.presentation.album_detail.AlbumDetailScreen
+import com.example.icfealabanza.presentation.album_detail.AlbumDetailViewModel
 import com.example.icfealabanza.presentation.artist_detail.ArtistDetailScreen
 import com.example.icfealabanza.presentation.artist_detail.ArtistDetailViewModel
 import com.example.icfealabanza.presentation.home.HomeScreen
@@ -72,7 +76,10 @@ class MainActivity : ComponentActivity() {
             val searchViewModel: SearchViewModel = hiltViewModel()
             val homeViewModel: HomeViewModel = hiltViewModel()
             val artistDetailViewModel: ArtistDetailViewModel = hiltViewModel()
+            val albumDetailViewModel: AlbumDetailViewModel = hiltViewModel()
+
             IcfeAlabanzaTheme {
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -83,14 +90,23 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                     ) {
                         NavHost(navController = navController, startDestination = "home") {
-                            composable("home") {
+                            composable(
+                                "home",
+                                popEnterTransition = { fadeIn() })
+                                {
                                 HomeScreen(
                                     mainViewModel = mainViewModel,
                                     viewModel = homeViewModel,
                                     navController = navController
                                 )
                             }
-                            composable("search") {
+                            composable(
+                                "search",
+                                enterTransition = {
+                                    slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(200))
+                                },
+                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(200)) }
+                                ) {
                                 SearchScreen(
                                     viewModel = searchViewModel,
                                     mainViewModel = mainViewModel,
@@ -99,14 +115,33 @@ class MainActivity : ComponentActivity() {
                             }
                             composable(
                                 "album_detail/{id}",
-                                arguments = listOf(navArgument("id") { type = NavType.StringType })
+                                arguments = listOf(navArgument("id") { type = NavType.StringType }),
+                                enterTransition = {
+                                    slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(200))
+                                },
+                                exitTransition = {
+                                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down)
+                                },
+                                popEnterTransition = { fadeIn() }
                             ) {
-                                val id = it.arguments?.getString("id")
-
+                                val id = it.arguments?.getString("id")!!
+                                AlbumDetailScreen(
+                                    albumId = id,
+                                    mainViewModel = mainViewModel,
+                                    viewModel = albumDetailViewModel,
+                                    navController = navController
+                                )
                             }
                             composable(
                                 "artist_detail/{id}",
-                                arguments = listOf(navArgument("id") { type = NavType.StringType })
+                                arguments = listOf(navArgument("id") { type = NavType.StringType }),
+                                enterTransition = {
+                                   slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(200))
+                                },
+                                exitTransition = {
+                                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down)
+                                },
+                                popEnterTransition = { fadeIn() }
                             ) {
                                 val id = it.arguments?.getString("id")!!
                                 ArtistDetailScreen(
@@ -117,28 +152,26 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composable(
-                                "song_detail/{id}",
-                                arguments = listOf(navArgument("id") { type = NavType.IntType })
-                            ) {
-                                val id = it.arguments?.getInt("id", 0)
-
-                            }
-                            composable(
-                                "web_view/{query}/{mode}",
+                                "web_view/{query}",
                                 arguments = listOf(
-                                    navArgument("query") { type = NavType.StringType },
-                                    navArgument("mode") { type = NavType.StringType }
-                                )
+                                    navArgument("query") { type = NavType.StringType }
+                                ),
+                                enterTransition = {
+                                    slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(200))
+                                },
+                                exitTransition = {
+                                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down)
+                                },
                             ) {
                                 val query = it.arguments?.getString("query")!!
-                                val mode = it.arguments?.getString("mode")!!
                                 WebViewScreen(
                                     navController = navController,
                                     query = query,
-                                    mode = mode
                                 )
                             }
                         }
+
+
                         if (mainViewModel.currentPlayingSong != null)
                             BottomPlayingSong(
                                 item = mainViewModel.currentPlayingSong!!,
@@ -151,6 +184,7 @@ class MainActivity : ComponentActivity() {
                             )
                         if (mainViewModel.isBottomSheetVisible) {
                             ModalBottomSheet(onDismissRequest = { mainViewModel.hideBottomSheet() }) {
+                                val context = LocalContext.current
                                 BottomSheetContentSong(
                                     songListItem = mainViewModel.selectedItem,
                                     webViewLyrics = {
@@ -159,7 +193,7 @@ class MainActivity : ComponentActivity() {
                                     },
                                     webViewNotes = {
                                         mainViewModel.hideBottomSheet()
-                                        mainViewModel.navigateToNotes(it, navController)
+                                        mainViewModel.navigateToNotes(it, context)
                                     },
                                     isPlayingPreview = mainViewModel.currentPlayingSong == mainViewModel.selectedItem && mainViewModel.isPlaying,
                                     playSong = { mainViewModel.playSong(it) },

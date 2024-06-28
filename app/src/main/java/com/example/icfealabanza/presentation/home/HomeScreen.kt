@@ -81,9 +81,13 @@ fun HomeScreen(
                 VersiculoLema()
             }
             item {
-                ArtistsList(list = relatedArtistsHillsong, "Similares a Hillsong") {
-                    navController.navigate("artist_detail/${it.id}")
-                }
+                ArtistsList(
+                    list = relatedArtistsHillsong,
+                    "Similares a Hillsong",
+                    onClick = { navController.navigate("artist_detail/${it.id}") }
+                    )
+
+
             }
         }
 

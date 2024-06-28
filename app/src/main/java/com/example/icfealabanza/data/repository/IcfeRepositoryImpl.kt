@@ -5,7 +5,6 @@ import com.example.icfealabanza.data.network.dto.album_from_artist.AlbumsFromArt
 import com.example.icfealabanza.data.network.dto.artist_top_songs.ArtistsTopSongsResponse
 import com.example.icfealabanza.data.network.dto.by_id.album_by_id.AlbumByIdDto
 import com.example.icfealabanza.data.network.dto.by_id.artist_by_id.ArtistByIdDto
-import com.example.icfealabanza.data.network.dto.by_id.song_by_id.SongByIdDto
 import com.example.icfealabanza.data.network.dto.related_artists.RelatedArtistsResponse
 import com.example.icfealabanza.data.network.dto.search.search_album.SearchAlbumResponse
 import com.example.icfealabanza.data.network.dto.search.search_artist.SearchArtistResponse
@@ -38,9 +37,6 @@ class IcfeRepositoryImpl @Inject constructor(private val apiClient: DeezerApiCli
         return safeApiCall { apiClient.getAlbumById(id) }
     }
 
-    override suspend fun getSongById(id: String): Result<SongByIdDto> {
-        return safeApiCall { apiClient.getSongById(id) }
-    }
 
     override suspend fun getArtistById(id: String): Result<ArtistByIdDto> {
         return safeApiCall { apiClient.getArtistById(id) }

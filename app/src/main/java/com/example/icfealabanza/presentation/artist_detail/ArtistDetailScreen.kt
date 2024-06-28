@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -23,7 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,24 +30,19 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +58,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.icfealabanza.domain.models.AlbumListItem
 import com.example.icfealabanza.domain.models.SongListItem
+import com.example.icfealabanza.presentation.home.ArtistsList
 import com.example.icfealabanza.presentation.main.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -96,13 +90,14 @@ fun ArtistDetailScreen(
     val colorIcon = if (firstVisibleItem >= 1) Color.Transparent else Color.Black.copy(alpha = 0.2f)
     val colorI by animateColorAsState(targetValue = colorIcon, label = "")
     val title = if (firstVisibleItem < 1) "" else artist?.name ?: ""
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(text = title) },
                 navigationIcon = {
                     IconButton(
-                        onClick = { navController.popBackStack() },
+                        onClick = { navController.navigateUp() },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = colorI
                         )
@@ -126,9 +121,7 @@ fun ArtistDetailScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
             artistTopSongs(
-                list = if (topSongs.size >= 6) topSongs.subList(0, 5)
-                else if (topSongs.isNotEmpty()) topSongs.subList(0, topSongs.size)
-                else emptyList(),
+                list = topSongs.take(5),
                 onClick = { mainViewModel.onSongClick(it) },
                 onButtonClick = {
                     viewModel.isTopSongsSheetShowed = true
@@ -137,7 +130,7 @@ fun ArtistDetailScreen(
             item {
                 ArtistAlbums(
                     list = albums,
-                    onClick = { },
+                    onClick = { item -> navController.navigate("album_detail/${item.id}") },
                     onFinishScroll = { index ->
                         scope.launch {
                             viewModel.artistAlbumsLoading = true
@@ -150,7 +143,15 @@ fun ArtistDetailScreen(
                     isLoading = viewModel.artistAlbumsLoading
                 )
             }
-            item { Spacer(modifier = Modifier.height(32.dp)) }
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
+                ArtistsList(
+                    list = relatedArtists,
+                    title = "Artistas Similares",
+                    onClick = { navController.navigate("artist_detail/${it.id}") }
+                )
+
+            }
         }
         if (viewModel.isTopSongsSheetShowed) {
             ModalBottomSheet(
@@ -219,7 +220,10 @@ fun LazyListScope.artistTopSongs(
         )
         Spacer(modifier = Modifier.height(4.dp))
     }
-    itemsIndexed(list) { index: Int, item: SongListItem ->
+    itemsIndexed(
+        list,
+        key = { _, item -> item.id }
+    ) { index: Int, item: SongListItem ->
         SongItem(song = item, index = index) { onClick(it) }
     }
     item {
@@ -234,10 +238,11 @@ fun LazyListScope.artistTopSongs(
     }
 }
 
+
 @Composable
 fun ArtistAlbums(
     list: List<AlbumListItem>,
-    onClick: () -> Unit,
+    onClick: (AlbumListItem) -> Unit,
     onFinishScroll: (Int) -> Unit,
     isLoading: Boolean
 ) {
@@ -254,10 +259,16 @@ fun ArtistAlbums(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item { Spacer(modifier = Modifier.width(8.dp)) }
-        itemsIndexed(list) { index: Int, item: AlbumListItem ->
-            AlbumItem(albumListItem = item) { onClick() }
+        itemsIndexed(
+            list,
+            key = { _, item ->  item.id}
+        ) { index: Int, item: AlbumListItem ->
+            AlbumItem(albumListItem = item) { onClick(item) }
             if (index == list.lastIndex) {
-                onFinishScroll(index + 1)
+                LaunchedEffect(key1 = Unit) {
+                    onFinishScroll(index + 1)
+                }
+
             }
         }
         item {
@@ -270,9 +281,15 @@ fun ArtistAlbums(
 fun AlbumItem(albumListItem: AlbumListItem, onClick: () -> Unit) {
     Surface(
         onClick = { onClick() },
-        modifier = Modifier.clip(RoundedCornerShape(8.dp))
-    ) {
-        Column {
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp)),
+
+        ) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(4.dp)
+        ) {
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -289,14 +306,20 @@ fun AlbumItem(albumListItem: AlbumListItem, onClick: () -> Unit) {
                     modifier = Modifier.fillMaxSize(),
                 )
             }
-            Text(
-                text = albumListItem.title,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.width(200.dp)
-            )
-            Text(text = albumListItem.releaseDate, color = Color.LightGray)
+            Column {
+                Text(
+                    text = albumListItem.title,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.width(180.dp)
+                )
+                Text(
+                    text = albumListItem.releaseDate,
+                    color = Color.LightGray)
+            }
+
+
         }
     }
 }
@@ -365,7 +388,10 @@ fun SongsBottomSheetContent(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        itemsIndexed(list) { index: Int, item: SongListItem ->
+        itemsIndexed(
+            list,
+            key = { _, item -> item.id }
+        ) { index: Int, item: SongListItem ->
             SongItem(song = item, index = index) { mainViewModel.onSongClick(item) }
             if (list.lastIndex == index) {
                 LaunchedEffect(key1 = Unit) {

@@ -62,8 +62,14 @@ class ArtistDetailViewModel @Inject constructor(
         else artistTopSongs.value = topSongs
     }
 
-    suspend fun getRelatedArtists(id: String, index: Int = 0) {
-        relatedArtists.value = getRelatedArtistsUseCase(id, index)
+    private suspend fun getRelatedArtists(id: String, index: Int = 0) {
+        val result = getRelatedArtistsUseCase(id, index)
+        if (index != 0) {
+            val aux = relatedArtists.value.toMutableList()
+            aux.addAll(result)
+            relatedArtists.value = aux
+        }
+        else relatedArtists.value = result
     }
 
     suspend fun getArtistAlbums(id:String, limit: Int = 10, index: Int = 0) {
