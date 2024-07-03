@@ -98,7 +98,10 @@ fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController) {
                             list = state.songs,
                             isLoading = viewModel.isLoadingSongs,
                             onButtonClick = { idx -> viewModel.loadMoreSongs(viewModel.query, idx) },
-                            onClick = { keyboardController?.hide() })
+                            onClick = {
+                                /*TODO: Agregar bottom sheet a la pantalla*/
+                                keyboardController?.hide()
+                            })
                     }
                     if (state.artists.isNotEmpty()) {
                         item {
@@ -130,7 +133,7 @@ fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController) {
                             list = state.albums,
                             isLoading = viewModel.isLoadingAlbums,
                             onButtonClick = { idx -> viewModel.loadMoreAlbums(viewModel.query, idx) },
-                            onClick = {  }
+                            onClick = { navController.navigate("album_detail/${it}") }
                         )
                     }
                     item { Spacer(modifier = Modifier.height(92.dp)) }

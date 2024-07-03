@@ -39,10 +39,10 @@ fun ReuDetailScreen(reuId: String, viewModel: ReuDetailScreenViewModel, navContr
                          Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "")
                      } },
                      actions = {
-                         IconButton(onClick = { /*TODO*/ }) {
+                         IconButton(onClick = { /*TODO: Agregar track*/ }) {
                              Icon(imageVector = Icons.Default.Add, contentDescription = "")
                          }
-                         IconButton(onClick = { /*TODO*/ }) {
+                         IconButton(onClick = { /*TODO: Eliminar reu*/ }) {
                              Icon(imageVector = Icons.Default.Delete, contentDescription = "")
                          }
                      }
@@ -61,7 +61,7 @@ fun ReuDetailScreen(reuId: String, viewModel: ReuDetailScreenViewModel, navContr
                 modifier = Modifier.padding(pad)
             ) {
                 items(viewModel.reu!!.tracks) { track ->
-                    TrackItemSM(track = track, onClick = {  })
+                    TrackItemSM(track = track, onClick = { /*TODO: Agregar bottom sheet a la pantalla*/ })
                 }
             }
         }
