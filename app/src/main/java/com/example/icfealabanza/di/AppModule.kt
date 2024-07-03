@@ -2,6 +2,7 @@ package com.example.icfealabanza.di
 
 import com.example.icfealabanza.common.constants.BASE_URL
 import com.example.icfealabanza.data.network.api_client.DeezerApiClient
+import com.google.firebase.database.FirebaseDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,7 +26,11 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun getApiClient(retrofit: Retrofit) =
+    fun getApiClient(retrofit: Retrofit): DeezerApiClient =
         retrofit.create(DeezerApiClient::class.java)
+
+    @Singleton
+    @Provides
+    fun getFirebaseDatabase(): FirebaseDatabase = FirebaseDatabase.getInstance()
 
 }

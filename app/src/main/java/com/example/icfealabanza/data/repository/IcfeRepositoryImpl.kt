@@ -1,5 +1,6 @@
 package com.example.icfealabanza.data.repository
 
+import com.example.icfealabanza.data.firebase.FirebaseService
 import com.example.icfealabanza.data.network.api_client.DeezerApiClient
 import com.example.icfealabanza.data.network.dto.album_from_artist.AlbumsFromArtistResponse
 import com.example.icfealabanza.data.network.dto.artist_top_songs.ArtistsTopSongsResponse
@@ -9,6 +10,8 @@ import com.example.icfealabanza.data.network.dto.related_artists.RelatedArtistsR
 import com.example.icfealabanza.data.network.dto.search.search_album.SearchAlbumResponse
 import com.example.icfealabanza.data.network.dto.search.search_artist.SearchArtistResponse
 import com.example.icfealabanza.data.network.dto.search.search_song.SearchSongResponse
+import com.example.icfealabanza.domain.models.Reunion
+import com.example.icfealabanza.domain.models.SongListItem
 import com.example.icfealabanza.domain.repository.IcfeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,7 +21,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class IcfeRepositoryImpl @Inject constructor(private val apiClient: DeezerApiClient) : IcfeRepository {
+class IcfeRepositoryImpl @Inject constructor(
+    private val apiClient: DeezerApiClient,
+    private val firebaseService: FirebaseService
+) : IcfeRepository {
 
     private suspend fun <T> safeApiCall(apiCall: suspend () -> Response<T>): Result<T> {
         val result = try {
@@ -88,5 +94,49 @@ class IcfeRepositoryImpl @Inject constructor(private val apiClient: DeezerApiCli
     ): Result<SearchSongResponse> {
         return safeApiCall { apiClient.searchSong(query, limit, index) }
 
+    }
+
+    override fun getReus(onSuccess: (List<Reunion>) -> Unit, onError: (Exception) -> Unit) {
+        firebaseService.getReus(onSuccess, onError)
+    }
+
+    override suspend fun saveReu(reu: Reunion): Boolean {
+        return firebaseService.saveReu(reu)
+    }
+
+    override fun getReuById(
+        id: String,
+        onSuccess: (Reunion) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        firebaseService.getReuById(id, onSuccess, onError)
+    }
+
+    override suspend fun deleteReu(
+        id: String,
+        onSuccess: (String) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        firebaseService.deleteReu(id, onSuccess, onError)
+    }
+
+    override fun addTrackToReu(
+        idReu: String,
+        track: SongListItem,
+        onErrorS: (String) -> Unit,
+        onError: (Exception) -> Unit,
+        onSuccess: (String) -> Unit
+    ) {
+        firebaseService.addTrackToReu(idReu, track, onErrorS, onError, onSuccess)
+    }
+
+    override fun deleteTrackFromReu(
+        idReu: String,
+        track: SongListItem,
+        onSuccess: (String) -> Unit,
+        onErrorS: (String) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        firebaseService.deleteTrackFromReu(idReu, track, onSuccess, onErrorS, onError)
     }
 }

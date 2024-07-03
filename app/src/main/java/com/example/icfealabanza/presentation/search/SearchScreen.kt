@@ -45,17 +45,19 @@ import coil.request.ImageRequest
 import com.example.icfealabanza.domain.models.AlbumListItem
 import com.example.icfealabanza.domain.models.ArtistListItem
 import com.example.icfealabanza.domain.models.SongListItem
-import com.example.icfealabanza.presentation.main.MainViewModel
+import com.example.icfealabanza.presentation.global_components.AlbumItemSM
+import com.example.icfealabanza.presentation.global_components.ArtistItemSM
+import com.example.icfealabanza.presentation.global_components.TrackItemSM
 import kotlinx.coroutines.Dispatchers
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(viewModel: SearchViewModel, mainViewModel: MainViewModel, navController: NavHostController) {
+fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController) {
     val state by viewModel.state.collectAsState()
     val lazyListState = rememberLazyListState()
     val keyboardController = LocalSoftwareKeyboardController.current
     LaunchedEffect(key1 = lazyListState.isScrollInProgress) {
-        if (lazyListState.isScrollInProgress) keyboardController?.hide()
+        if (lazyListState.isScrollInProgress && keyboardController != null) keyboardController.hide()
     }
 
     Box(
@@ -96,9 +98,7 @@ fun SearchScreen(viewModel: SearchViewModel, mainViewModel: MainViewModel, navCo
                             list = state.songs,
                             isLoading = viewModel.isLoadingSongs,
                             onButtonClick = { idx -> viewModel.loadMoreSongs(viewModel.query, idx) },
-                            onClick = {
-                                keyboardController?.hide()
-                                    mainViewModel.onSongClick(it) })
+                            onClick = { keyboardController?.hide() })
                     }
                     if (state.artists.isNotEmpty()) {
                         item {
@@ -168,15 +168,8 @@ fun LazyListScope.songList(
     onButtonClick: (Int) -> Unit,
     onClick: (SongListItem) -> Unit
 ) {
-    items(list) { song ->
-        SearchListItem(
-            id = song.id,
-            title = song.title,
-            subTitle = song.artist,
-            imageUrl = song.coverSmall
-        ) {
-            onClick(song)
-        }
+    items(list) { track ->
+        TrackItemSM(track = track, onClick = { onClick(it) })
     }
     item {
         if (isLoading) Box(
@@ -198,14 +191,7 @@ fun LazyListScope.artistsList(
     onClick: (String) -> Unit
 ) {
     items(list) { artist ->
-        SearchListItem(
-            id = artist.id,
-            title = artist.name,
-            imageUrl = artist.cover,
-            subTitle = ""
-        ) { id ->
-            onClick(id)
-        }
+        ArtistItemSM(artist = artist, onClick = { onClick(it.id) })
     }
     item {
         if (isLoading) Box(
@@ -227,14 +213,7 @@ fun LazyListScope.albumsList(
     onClick: (String) -> Unit
 ) {
     items(list) { album ->
-        SearchListItem(
-            id = album.id,
-            title = album.title,
-            imageUrl = album.coverSmall,
-            subTitle = album.name
-        ) { id ->
-            onClick(id)
-        }
+        AlbumItemSM(album = album, onClick = { onClick(it.id) })
     }
     item {
         if (isLoading) Box(
@@ -249,53 +228,6 @@ fun LazyListScope.albumsList(
     }
 }
 
-@Composable
-fun SearchListItem(
-    id: String,
-    title: String,
-    imageUrl: String?,
-    subTitle: String,
-    onClick: (String) -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(17)),
-        onClick = { onClick(id) }
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .dispatcher(Dispatchers.IO)
-                    .crossfade(true)
-                    .placeholder(null)
-                    .build(),
-                contentDescription = "",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(17))
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (subTitle.isNotBlank())
-                    Text(text = subTitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-        }
-    }
-}
 
 
 

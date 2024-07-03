@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -74,6 +75,10 @@ dependencies {
     implementation(libs.coil.compose)
 
     implementation(libs.androidx.webkit)
+
+    implementation(platform(libs.firebase.bom))
+    implementation("com.google.firebase:firebase-database-ktx")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

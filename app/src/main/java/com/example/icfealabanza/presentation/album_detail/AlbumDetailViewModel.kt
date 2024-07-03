@@ -3,7 +3,6 @@ package com.example.icfealabanza.presentation.album_detail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.icfealabanza.domain.models.AlbumDetail
-import com.example.icfealabanza.domain.models.SongListItem
 import com.example.icfealabanza.domain.use_cases.GetAlbumByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async

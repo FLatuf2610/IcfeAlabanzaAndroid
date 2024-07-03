@@ -1,7 +1,6 @@
 package com.example.icfealabanza.presentation.album_detail
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,8 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.icfealabanza.presentation.main.MainViewModel
-import com.example.icfealabanza.presentation.search.SearchListItem
+import com.example.icfealabanza.presentation.global_components.TrackItemSM
 import kotlinx.coroutines.Dispatchers
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +50,6 @@ import kotlinx.coroutines.Dispatchers
 @Composable
 fun AlbumDetailScreen(
     albumId: String,
-    mainViewModel: MainViewModel,
     viewModel: AlbumDetailViewModel,
     navController: NavController
 ) {
@@ -96,10 +93,8 @@ fun AlbumDetailScreen(
             item {
                 AlbumHeader(name = album?.title ?: "", image = album?.cover ?:"")
             }
-            items(album?.tracks ?: emptyList()) { item ->
-                SearchListItem(id = item.id, title = item.title, imageUrl = item.coverSmall, subTitle = item.artist) {
-                    mainViewModel.onSongClick(item)
-                }
+            items(album?.tracks ?: emptyList()) { track ->
+                TrackItemSM(track = track, onClick = {  })
             }
         }
     }

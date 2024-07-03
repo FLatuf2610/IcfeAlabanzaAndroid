@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "160625956948",
+    "firebase_url": "https://icfe-alabanza-app-default-rtdb.firebaseio.com",
+    "project_id": "icfe-alabanza-app",
+    "storage_bucket": "icfe-alabanza-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:160625956948:android:3085f60c327cacd3a135c1",
+        "android_client_info": {
+          "package_name": "com.example.icfealabanza"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBilgqHBB9vrz0Z9k-eyH-16OBW0aBgFQI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

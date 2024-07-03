@@ -28,14 +28,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -58,8 +56,8 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.icfealabanza.domain.models.AlbumListItem
 import com.example.icfealabanza.domain.models.SongListItem
-import com.example.icfealabanza.presentation.home.ArtistsList
-import com.example.icfealabanza.presentation.main.MainViewModel
+import com.example.icfealabanza.presentation.global_components.AlbumItemMD
+import com.example.icfealabanza.presentation.global_components.ArtistsList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -70,7 +68,6 @@ import kotlinx.coroutines.launch
 fun ArtistDetailScreen(
     artistId: String,
     viewModel: ArtistDetailViewModel,
-    mainViewModel: MainViewModel,
     navController: NavController,
 ) {
     LaunchedEffect(key1 = artistId) {
@@ -82,7 +79,6 @@ fun ArtistDetailScreen(
     val relatedArtists by viewModel.relatedArtists.collectAsState()
     val topSongs by viewModel.artistTopSongs.collectAsState()
     val lazyColumnState = rememberLazyListState()
-    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val firstVisibleItem by remember { derivedStateOf { lazyColumnState.firstVisibleItemIndex } }
     val colorTopBar =
         if (firstVisibleItem < 1) Color.Transparent else MaterialTheme.colorScheme.background
@@ -122,27 +118,26 @@ fun ArtistDetailScreen(
             }
             artistTopSongs(
                 list = topSongs.take(5),
-                onClick = { mainViewModel.onSongClick(it) },
+                onClick = {  },
                 onButtonClick = {
                     viewModel.isTopSongsSheetShowed = true
                 },
             )
-            item {
-                ArtistAlbums(
-                    list = albums,
-                    onClick = { item -> navController.navigate("album_detail/${item.id}") },
-                    onFinishScroll = { index ->
-                        scope.launch {
-                            viewModel.artistAlbumsLoading = true
-                            async {
-                                viewModel.getArtistAlbums(artistId, index = index)
-                                viewModel.artistAlbumsLoading = false
-                            }.await()
-                        }
-                    },
-                    isLoading = viewModel.artistAlbumsLoading
-                )
-            }
+            artistAlbums(
+                list = albums,
+                onClick = { item -> navController.navigate("album_detail/${item.id}") },
+                onFinishScroll = { index ->
+                    scope.launch {
+                        viewModel.artistAlbumsLoading = true
+                        async {
+                            viewModel.getArtistAlbums(artistId, index = index)
+                            viewModel.artistAlbumsLoading = false
+                        }.await()
+                    }
+                },
+                isLoading = viewModel.artistAlbumsLoading
+            )
+
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 ArtistsList(
@@ -152,28 +147,6 @@ fun ArtistDetailScreen(
                 )
 
             }
-        }
-        if (viewModel.isTopSongsSheetShowed) {
-            ModalBottomSheet(
-                onDismissRequest = { viewModel.isTopSongsSheetShowed = false },
-                sheetState = bottomSheetState
-            ) {
-                SongsBottomSheetContent(
-                    list = topSongs,
-                    mainViewModel = mainViewModel,
-                    isLoading = viewModel.artistTopSongsLoading,
-                    onFinishScroll = { index ->
-                        scope.launch {
-                            viewModel.artistTopSongsLoading = true
-                            async {
-                                viewModel.getTopSongs(artistId, 10, index)
-                                viewModel.artistAlbumsLoading = false
-                            }.await()
-                        }
-                    }
-                )
-            }
-
         }
     }
 }
@@ -194,7 +167,7 @@ fun ArtistHeader(name: String, image: String) {
             contentDescription = "",
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(160.dp)
+                .size(180.dp)
                 .clip(CircleShape)
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -238,91 +211,45 @@ fun LazyListScope.artistTopSongs(
     }
 }
 
-
-@Composable
-fun ArtistAlbums(
+fun LazyListScope.artistAlbums(
     list: List<AlbumListItem>,
     onClick: (AlbumListItem) -> Unit,
     onFinishScroll: (Int) -> Unit,
     isLoading: Boolean
 ) {
-    Text(
-        text = "Albumes",
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        modifier = Modifier.padding(start = 8.dp)
-    )
-    Spacer(modifier = Modifier.height(8.dp))
-    LazyRow(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        item { Spacer(modifier = Modifier.width(8.dp)) }
-        itemsIndexed(
-            list,
-            key = { _, item ->  item.id}
-        ) { index: Int, item: AlbumListItem ->
-            AlbumItem(albumListItem = item) { onClick(item) }
-            if (index == list.lastIndex) {
-                LaunchedEffect(key1 = Unit) {
-                    onFinishScroll(index + 1)
+    item {
+        Text(
+            text = "Albumes",
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 18.sp,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+    item {
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            itemsIndexed(
+                list,
+                key = { _, item ->  item.id}
+            ) { index: Int, item: AlbumListItem ->
+                AlbumItemMD(album = item) { onClick(item) }
+                if (index == list.lastIndex) {
+                    LaunchedEffect(key1 = Unit) {
+                        onFinishScroll(index + 1)
+                    }
+
                 }
-
             }
-        }
-        item {
-            if (isLoading) CircularProgressIndicator()
+            item {
+                if (isLoading) CircularProgressIndicator()
+            }
         }
     }
 }
 
-@Composable
-fun AlbumItem(albumListItem: AlbumListItem, onClick: () -> Unit) {
-    Surface(
-        onClick = { onClick() },
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp)),
 
-        ) {
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(4.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(180.dp)
-                    .clip(RoundedCornerShape(17))
-            ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(albumListItem.coverSmall)
-                        .crossfade(true)
-                        .dispatcher(Dispatchers.IO)
-                        .build(),
-                    contentDescription = "",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-            Column {
-                Text(
-                    text = albumListItem.title,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.width(180.dp)
-                )
-                Text(
-                    text = albumListItem.releaseDate,
-                    color = Color.LightGray)
-            }
-
-
-        }
-    }
-}
 
 @Composable
 fun SongItem(song: SongListItem, index: Int, onClick: (SongListItem) -> Unit) {
@@ -368,44 +295,6 @@ fun SongItem(song: SongListItem, index: Int, onClick: (SongListItem) -> Unit) {
     }
 }
 
-@Composable
-fun SongsBottomSheetContent(
-    list: List<SongListItem>,
-    mainViewModel: MainViewModel,
-    onFinishScroll: (Int) -> Unit,
-    isLoading: Boolean
-) {
-    Text(
-        text = "Populares",
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        modifier = Modifier.padding(8.dp)
-    )
-    Spacer(modifier = Modifier.height(4.dp))
-    LazyColumn(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        itemsIndexed(
-            list,
-            key = { _, item -> item.id }
-        ) { index: Int, item: SongListItem ->
-            SongItem(song = item, index = index) { mainViewModel.onSongClick(item) }
-            if (list.lastIndex == index) {
-                LaunchedEffect(key1 = Unit) {
-                    onFinishScroll(index + 1)
-                }
-            }
-        }
-        item {
-            if (isLoading) {
-                CircularProgressIndicator()
-            }
-        }
-    }
-}
 
 
 

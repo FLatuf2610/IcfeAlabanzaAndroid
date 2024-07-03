@@ -29,7 +29,6 @@ class ArtistDetailViewModel @Inject constructor(
         private set
     var artistTopSongs = MutableStateFlow<List<SongListItem>>(emptyList())
         private set
-    var artistTopSongsLoading by mutableStateOf(false)
     var relatedArtists = MutableStateFlow<List<ArtistListItem>>(emptyList())
         private set
     var artistAlbums = MutableStateFlow<List<AlbumListItem>>(emptyList())

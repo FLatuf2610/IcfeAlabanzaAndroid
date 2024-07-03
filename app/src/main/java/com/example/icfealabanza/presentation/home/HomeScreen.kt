@@ -6,18 +6,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -25,36 +18,26 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.example.icfealabanza.R
-import com.example.icfealabanza.domain.models.ArtistListItem
-import com.example.icfealabanza.presentation.main.MainViewModel
-import kotlinx.coroutines.Dispatchers
+import com.example.icfealabanza.presentation.global_components.ArtistsList
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    mainViewModel: MainViewModel,
     navController: NavHostController,
     viewModel: HomeViewModel
 ) {
@@ -85,72 +68,10 @@ fun HomeScreen(
                     list = relatedArtistsHillsong,
                     "Similares a Hillsong",
                     onClick = { navController.navigate("artist_detail/${it.id}") }
-                    )
-
-
-            }
-        }
-
-    }
-}
-
-@Composable
-fun ArtistsList(list: List<ArtistListItem>, title: String, onClick: (ArtistListItem) -> Unit) {
-    Column {
-        Text(
-            text = title,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
-            modifier = Modifier.padding(start = 8.dp)
-        )
-        LazyRow {
-            items(list) { item ->
-                ArtistItem(artist = item) { onClick(it) }
-            }
-        }
-    }
-}
-
-@Composable
-fun SongsList() {
-
-}
-
-@Composable
-fun ArtistItem(artist: ArtistListItem, onClick: (ArtistListItem) -> Unit) {
-    Surface(
-        modifier = Modifier.clip(RoundedCornerShape(17)),
-        onClick = { onClick(artist) }
-    ) {
-        Column(
-            modifier = Modifier.padding(8.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            Box(
-                modifier = Modifier
-                    .size(140.dp)
-                    .clip(CircleShape)
-            ) {
-                AsyncImage(model = ImageRequest.Builder(LocalContext.current)
-                    .data(artist.cover)
-                    .crossfade(true)
-                    .dispatcher(Dispatchers.IO)
-                    .build(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
                 )
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                modifier = Modifier.width(152.dp),
-                text = artist.name,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
         }
+
     }
 }
 
