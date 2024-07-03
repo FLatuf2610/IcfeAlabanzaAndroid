@@ -9,9 +9,8 @@ class GetAlbumByIdUseCase @Inject constructor(private val repositoryImpl: IcfeRe
 
     suspend operator fun invoke(albumId: String): AlbumDetail? {
         val result = repositoryImpl.getAlbumById(albumId)
-        if (result.isSuccess) {
-            return result.getOrNull()!!.toDomain()
-        }
-        else return null
+        return if (result.isSuccess) {
+            result.getOrNull()!!.toDomain()
+        } else null
     }
 }

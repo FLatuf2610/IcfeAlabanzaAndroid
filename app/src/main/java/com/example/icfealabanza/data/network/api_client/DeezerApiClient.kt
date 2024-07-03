@@ -42,8 +42,8 @@ interface DeezerApiClient {
     @GET("artist/{id}/related")
     suspend fun getRelatedArtists(
         @Path("id")id: String,
-        @Query("limit")limit: Int = 5,
-        @Query("index")index: Int = 0
+        @Query("limit")limit: Int = 15,
+        @Query("index")index: Int
     ): Response<RelatedArtistsResponse>
 
     @GET("search/artist")

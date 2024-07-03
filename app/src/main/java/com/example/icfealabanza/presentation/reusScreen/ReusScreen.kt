@@ -103,7 +103,7 @@ fun ReusScreen(
                     .fillMaxSize()
             ) {
                 items(reus!!) {reu ->
-                    ReuItemSM(reu = reu, onClick = {})
+                    ReuItemSM(reu = reu, onClick = { navController.navigate("reu_detail/${reu.id}") })
                 }
             }
         }

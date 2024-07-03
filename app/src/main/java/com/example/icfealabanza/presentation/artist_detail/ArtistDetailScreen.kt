@@ -40,7 +40,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,8 +58,6 @@ import com.example.icfealabanza.domain.models.SongListItem
 import com.example.icfealabanza.presentation.global_components.AlbumItemMD
 import com.example.icfealabanza.presentation.global_components.ArtistsList
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,10 +67,11 @@ fun ArtistDetailScreen(
     viewModel: ArtistDetailViewModel,
     navController: NavController,
 ) {
-    LaunchedEffect(key1 = artistId) {
+
+    LaunchedEffect(key1 = true) {
         viewModel.initViewModel(artistId)
     }
-    val scope = rememberCoroutineScope()
+
     val artist by viewModel.artist.collectAsState()
     val albums by viewModel.artistAlbums.collectAsState()
     val relatedArtists by viewModel.relatedArtists.collectAsState()
@@ -106,48 +104,47 @@ fun ArtistDetailScreen(
         }
     )
     {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize(),
-            state = lazyColumnState
-        ) {
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
-                ArtistHeader(artist?.name ?: "", artist?.cover ?: "")
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            artistTopSongs(
-                list = topSongs.take(5),
-                onClick = {  },
-                onButtonClick = {
-                    viewModel.isTopSongsSheetShowed = true
-                },
-            )
-            artistAlbums(
-                list = albums,
-                onClick = { item -> navController.navigate("album_detail/${item.id}") },
-                onFinishScroll = { index ->
-                    scope.launch {
-                        viewModel.artistAlbumsLoading = true
-                        async {
-                            viewModel.getArtistAlbums(artistId, index = index)
-                            viewModel.artistAlbumsLoading = false
-                        }.await()
-                    }
-                },
-                isLoading = viewModel.artistAlbumsLoading
-            )
 
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
-                ArtistsList(
-                    list = relatedArtists,
-                    title = "Artistas Similares",
-                    onClick = { navController.navigate("artist_detail/${it.id}") }
+        if (viewModel.isLoadingState) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+                state = lazyColumnState
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(32.dp))
+                    ArtistHeader(artist?.name ?: "", artist?.cover ?: "")
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                artistTopSongs(
+                    list = topSongs.take(5),
+                    onClick = {  },
+                    onButtonClick = { /*TODO: Navigate to Popular Screen*/ },
+                )
+                artistAlbums(
+                    list = albums,
+                    onClick = { item -> navController.navigate("album_detail/${item.id}") },
+                    onFinishScroll = { index -> viewModel.getArtistAlbums(artistId, 7, index) },
+                    isLoading = viewModel.artistAlbumsLoading
                 )
 
+                item {
+                    Spacer(modifier = Modifier.height(32.dp))
+                    ArtistsList(
+                        list = relatedArtists,
+                        title = "Artistas Similares",
+                        onClick = { navController.navigate("artist_detail/${it.id}") }
+                    )
+
+                }
             }
         }
+
+
     }
 }
 
@@ -197,7 +194,7 @@ fun LazyListScope.artistTopSongs(
         list,
         key = { _, item -> item.id }
     ) { index: Int, item: SongListItem ->
-        SongItem(song = item, index = index) { onClick(it) }
+        TrackItemIndexed(song = item, index = index) { onClick(it) }
     }
     item {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -252,7 +249,7 @@ fun LazyListScope.artistAlbums(
 
 
 @Composable
-fun SongItem(song: SongListItem, index: Int, onClick: (SongListItem) -> Unit) {
+fun TrackItemIndexed(song: SongListItem, index: Int, onClick: (SongListItem) -> Unit) {
     Surface(
         onClick = { onClick(song) },
         modifier = Modifier

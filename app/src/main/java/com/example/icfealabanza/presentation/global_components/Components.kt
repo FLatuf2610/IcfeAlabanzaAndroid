@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -285,7 +287,8 @@ fun ArtistItemMD(artist: ArtistListItem, onClick: (ArtistListItem) -> Unit) {
 }
 
 @Composable
-fun ArtistsList(list: List<ArtistListItem>, title: String, onClick: (ArtistListItem) -> Unit) {
+fun ArtistsList(list: List<ArtistListItem>, title: String, onClick: (ArtistListItem) -> Unit,
+                isLoading: Boolean? = null, onFinishScroll: ((Int) -> Unit)? = null) {
     Column {
         Text(
             text = title,
@@ -293,9 +296,20 @@ fun ArtistsList(list: List<ArtistListItem>, title: String, onClick: (ArtistListI
             fontSize = 18.sp,
             modifier = Modifier.padding(start = 8.dp)
         )
-        LazyRow {
-            items(list) { item ->
+        LazyRow(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            itemsIndexed(list) { index, item ->
                 ArtistItemMD(artist = item) { onClick(it) }
+                if (index == list.lastIndex && onFinishScroll != null) {
+                    LaunchedEffect(key1 = true) {
+                        onFinishScroll(index + 1)
+                    }
+                }
+            }
+            item {
+                if (isLoading != null) { CircularProgressIndicator() }
             }
         }
     }

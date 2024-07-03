@@ -13,6 +13,7 @@ import com.example.icfealabanza.domain.use_cases.GetArtistByIdUseCase
 import com.example.icfealabanza.domain.use_cases.GetArtistTopSongs
 import com.example.icfealabanza.domain.use_cases.GetRelatedArtistsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,8 +26,10 @@ class ArtistDetailViewModel @Inject constructor(
     private val getAlbumsFromArtist: GetAlbumsFromArtist
 ) : ViewModel() {
 
+    var artistId = ""
     var artist = MutableStateFlow<ArtistListItem?>(null)
         private set
+    var isLoadingState by mutableStateOf(false)
     var artistTopSongs = MutableStateFlow<List<SongListItem>>(emptyList())
         private set
     var relatedArtists = MutableStateFlow<List<ArtistListItem>>(emptyList())
@@ -34,16 +37,20 @@ class ArtistDetailViewModel @Inject constructor(
     var artistAlbums = MutableStateFlow<List<AlbumListItem>>(emptyList())
         private set
     var artistAlbumsLoading by mutableStateOf(false)
+        private set
 
-    var isTopSongsSheetShowed by mutableStateOf(false)
 
 
     fun initViewModel(artistId: String) {
+        if (artistId == this.artistId) return
+        this.artistId = artistId
         viewModelScope.launch {
-            getTopSongs(id = artistId, limit = 15)
-            getRelatedArtists(id = artistId)
-            getArtist(artistId)
-            getArtistAlbums(artistId)
+            isLoadingState = true
+            async { getTopSongs(id = artistId, limit = 15)
+                getRelatedArtists(id = artistId)
+                getArtist(artistId)
+                getArtistAlbums(artistId) }.await()
+            isLoadingState = false
         }
     }
 
@@ -61,24 +68,26 @@ class ArtistDetailViewModel @Inject constructor(
         else artistTopSongs.value = topSongs
     }
 
-    private suspend fun getRelatedArtists(id: String, index: Int = 0) {
-        val result = getRelatedArtistsUseCase(id, index)
-        if (index != 0) {
-            val aux = relatedArtists.value.toMutableList()
-            aux.addAll(result)
-            relatedArtists.value = aux
+    fun getRelatedArtists(id: String, index: Int = 0) {
+        viewModelScope.launch {
+            val result = getRelatedArtistsUseCase(id, index)
+            relatedArtists.value = result
         }
-        else relatedArtists.value = result
     }
 
-    suspend fun getArtistAlbums(id:String, limit: Int = 10, index: Int = 0) {
-        val albums = getAlbumsFromArtist(id, limit, index)
-        if (index != 0) {
-            val aux = artistAlbums.value.toMutableList()
-            aux.addAll(albums)
-            artistAlbums.value = aux
+    fun getArtistAlbums(id:String, limit: Int = 7, index: Int = 0) {
+        viewModelScope.launch {
+            artistAlbumsLoading = true
+            val albums = async { getAlbumsFromArtist(id, limit, index) }.await()
+            if (index != 0) {
+                val aux = artistAlbums.value.toMutableList()
+                aux.addAll(albums)
+                artistAlbums.value = aux
+            }
+            else artistAlbums.value = albums
+            artistAlbumsLoading = false
         }
-        else artistAlbums.value = albums
+
     }
 
 }

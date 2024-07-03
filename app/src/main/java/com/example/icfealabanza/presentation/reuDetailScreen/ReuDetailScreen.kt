@@ -34,7 +34,7 @@ fun ReuDetailScreen(reuId: String, viewModel: ReuDetailScreenViewModel, navContr
     Scaffold(
         topBar = {
                  TopAppBar(
-                     title = { Text(text = "Nombre Reu") },
+                     title = { Text(text = viewModel.reu?.name ?: "") },
                      navigationIcon = { IconButton(onClick = { navController.navigateUp() }) {
                          Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "")
                      } },

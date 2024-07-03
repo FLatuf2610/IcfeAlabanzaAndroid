@@ -67,7 +67,7 @@ fun HomeScreen(
                 ArtistsList(
                     list = relatedArtistsHillsong,
                     "Similares a Hillsong",
-                    onClick = { navController.navigate("artist_detail/${it.id}") }
+                    onClick = { navController.navigate("artist_detail/${it.id}") },
                 )
             }
         }
