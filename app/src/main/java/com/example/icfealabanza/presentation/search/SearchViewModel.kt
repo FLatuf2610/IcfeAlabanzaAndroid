@@ -20,21 +20,18 @@ import javax.inject.Inject
 class SearchViewModel @Inject constructor(
     private val searchSongsUseCase: SearchSongsUseCase,
     private val searchArtistsUseCase: SearchArtistsUseCase,
-    private val searchAlbumUseCase: SearchAlbumUseCase
+    private val searchAlbumUseCase: SearchAlbumUseCase,
 ) : ViewModel() {
 
     var state = MutableStateFlow(SearchState())
         private set
-
     var isLoadingSongs by mutableStateOf(false)
     var isLoadingAlbums by mutableStateOf(false)
     var isLoadingArtists by mutableStateOf(false)
     var isLoading by mutableStateOf(false)
 
     private var searchJob: Job? = null
-
     var query by mutableStateOf("")
-
     fun search(query: String) {
         isLoading = false
         searchJob?.cancel()

@@ -100,6 +100,10 @@ class IcfeRepositoryImpl @Inject constructor(
         firebaseService.getReus(onSuccess, onError)
     }
 
+    override fun getSingleReu(onSuccess: (List<Reunion>) -> Unit, onError: (Exception) -> Unit) {
+        firebaseService.getReusSingle(onSuccess, onError)
+    }
+
     override suspend fun saveReu(reu: Reunion): Boolean {
         return firebaseService.saveReu(reu)
     }

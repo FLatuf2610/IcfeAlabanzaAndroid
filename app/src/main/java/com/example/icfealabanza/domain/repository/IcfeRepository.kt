@@ -66,6 +66,8 @@ interface IcfeRepository {
 
     fun getReus(onSuccess: (List<Reunion>) -> Unit, onError: (Exception) -> Unit)
 
+    fun getSingleReu(onSuccess: (List<Reunion>) -> Unit, onError: (Exception) -> Unit)
+
     suspend fun saveReu(reu: Reunion): Boolean
 
     fun getReuById(id: String, onSuccess: (Reunion) -> Unit, onError: (Exception) -> Unit)

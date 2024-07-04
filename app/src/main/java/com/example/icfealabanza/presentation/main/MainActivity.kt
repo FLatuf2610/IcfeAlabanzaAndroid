@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
+            val commonViewModel: CommonViewModel = hiltViewModel()
             val searchViewModel: SearchViewModel = hiltViewModel()
             val homeViewModel: HomeViewModel = hiltViewModel()
             val reuDetailScreenViewModel: ReuDetailScreenViewModel = hiltViewModel()
@@ -93,7 +94,9 @@ class MainActivity : ComponentActivity() {
                                     ReusScreen(viewModel = reusViewModel, navController = navController)
                                 }
                                 composable("search") {
-                                    SearchScreen(viewModel = searchViewModel, navController = navController)
+                                    SearchScreen(viewModel = searchViewModel,
+                                        navController = navController,
+                                        commonViewModel = commonViewModel)
                                 }
                                 composable(
                                     "album_detail/{id}",
@@ -148,7 +151,8 @@ class MainActivity : ComponentActivity() {
                                     ReuDetailScreen(
                                         reuId = id,
                                         viewModel = reuDetailScreenViewModel,
-                                        navController = navController)
+                                        navController = navController,
+                                        commonViewModel = commonViewModel)
                                 }
                                 composable(
                                     "web_view/{query}",

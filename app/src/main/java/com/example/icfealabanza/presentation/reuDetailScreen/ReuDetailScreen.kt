@@ -1,53 +1,97 @@
 package com.example.icfealabanza.presentation.reuDetailScreen
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
+import com.example.icfealabanza.domain.models.SongListItem
+import com.example.icfealabanza.presentation.global_components.AddBottomSheetContent
+import com.example.icfealabanza.presentation.global_components.TrackBottomSheetContent
 import com.example.icfealabanza.presentation.global_components.TrackItemSM
+import com.example.icfealabanza.presentation.main.CommonViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReuDetailScreen(reuId: String, viewModel: ReuDetailScreenViewModel, navController: NavController) {
+fun ReuDetailScreen(reuId: String,
+                    viewModel: ReuDetailScreenViewModel,
+                    navController: NavController,
+                    commonViewModel: CommonViewModel) {
 
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(key1 = reuId) {
         viewModel.getReuById(reuId)
     }
-
+    LaunchedEffect(key1 = commonViewModel.snackBarText) {
+        if (commonViewModel.snackBarText != null) {
+            snackbarHostState.showSnackbar(commonViewModel.snackBarText!!, "OK", duration = SnackbarDuration.Short)
+            commonViewModel.resetSnackBarText()
+        }
+    }
     Scaffold(
         topBar = {
-                 TopAppBar(
-                     title = { Text(text = viewModel.reu?.name ?: "") },
-                     navigationIcon = { IconButton(onClick = { navController.navigateUp() }) {
-                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "")
-                     } },
-                     actions = {
-                         IconButton(onClick = { /*TODO: Agregar track*/ }) {
-                             Icon(imageVector = Icons.Default.Add, contentDescription = "")
-                         }
-                         IconButton(onClick = { /*TODO: Eliminar reu*/ }) {
-                             Icon(imageVector = Icons.Default.Delete, contentDescription = "")
-                         }
-                     }
-                 )
+            TopAppBar(
+                title = { Text(text = viewModel.reu?.name ?: "") },
+                navigationIcon = { IconButton(onClick = { navController.navigateUp() }) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "")
+                } },
+                actions = {
+                    IconButton(onClick = { viewModel.showAddToReuBottomSheet() }) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "")
+                    }
+                    IconButton(onClick = {
+                        viewModel.showDeleteDialog()
+                    }) {
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = "")
+                    }
+                }
+            )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { pad ->
         if (viewModel.reu == null) {
             Box(
@@ -61,10 +105,112 @@ fun ReuDetailScreen(reuId: String, viewModel: ReuDetailScreenViewModel, navContr
                 modifier = Modifier.padding(pad)
             ) {
                 items(viewModel.reu!!.tracks) { track ->
-                    TrackItemSM(track = track, onClick = { /*TODO: Agregar bottom sheet a la pantalla*/ })
+                    TrackItemSM(track = track, onClick = { commonViewModel.showTrackBottomSheet(it) })
                 }
             }
         }
-
+        if (commonViewModel.isTrackBottomSheetShowed) {
+            ModalBottomSheet(onDismissRequest = { commonViewModel.hideTrackBottomSheet() }) {
+                TrackBottomSheetContent(
+                    songListItem = commonViewModel.selectedTrack,
+                    webViewLyrics = { commonViewModel.navigateToLyrics(it, navController) },
+                    webViewNotes = { commonViewModel.navigateToNotes(it, context) },
+                    onAddToReu = {
+                        commonViewModel.showAddBottomSheet(it)
+                        commonViewModel.hideTrackBottomSheet()
+                    },
+                    editMode = true,
+                    onDeleteFromReu = {
+                        commonViewModel.hideTrackBottomSheet()
+                        commonViewModel.deleteTrack(reuId = reuId, it)
+                    }
+                )
+            }
+        }
+        if (commonViewModel.isAddBottomSheetShowed) {
+            ModalBottomSheet(onDismissRequest = { commonViewModel.hideAddBottomSheet() }) {
+                AddBottomSheetContent(reus = commonViewModel.reus,
+                    onClick = {
+                        commonViewModel.addToReu(it.id!!, commonViewModel.addBottomSheetTrack!!)
+                        commonViewModel.hideAddBottomSheet()
+                    },
+                    getReus = { commonViewModel.getSingleReus()  })
+            }
+        }
+        if (viewModel.isDeleteDialogShowed) {
+            AlertDialog(
+                onDismissRequest = { viewModel.hideDeleteDialog() },
+                properties = DialogProperties(
+                    dismissOnClickOutside = false,
+                ),
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.hideDeleteDialog()
+                            viewModel.deleteReu(reuId = reuId)
+                            navController.navigateUp()
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                    ) {
+                        Text(text = "ACEPTAR")
+                    }
+                },
+                icon = { Icon(imageVector = Icons.Filled.Delete, contentDescription = "") },
+                text = { Text(text = "Estas seguro que queres eliminar la reu?") },
+                title = { Text(text = "Eliminar Reu") },
+                dismissButton = { TextButton(onClick = { viewModel.hideDeleteDialog() }) {
+                    Text(text = "CANCELAR")
+                    }
+                }
+            )
+        }
+        if (viewModel.isAddToReuBottomSheetShowed) {
+            ModalBottomSheet(
+                onDismissRequest = { viewModel.hideAddToReuBottomSheet() },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ) {
+                AddToReuBottomSheetContent(viewModel, onClickTrack = {
+                    viewModel.hideAddToReuBottomSheet()
+                    commonViewModel.addToReu(reuId, it)
+                } )
+            }
+        }
     }
+}
+
+@Composable
+fun AddToReuBottomSheetContent(viewModel: ReuDetailScreenViewModel, onClickTrack: (SongListItem) -> Unit) {
+    val tracks by viewModel.searchedTracks.collectAsState()
+    var query by remember { mutableStateOf("") }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val lazyListState = rememberLazyListState()
+    LaunchedEffect(key1 = lazyListState.isScrollInProgress) {
+        if (lazyListState.isScrollInProgress && keyboardController != null) keyboardController.hide()
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.90f)
+    ) {
+        TextField(
+            value = query,
+            onValueChange = {
+                query = it
+                viewModel.search(query)            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            items(tracks) { track ->
+                TrackItemSM(track = track, onClick = { item -> onClickTrack(item) })
+            }
+        }
+    }
+    
 }

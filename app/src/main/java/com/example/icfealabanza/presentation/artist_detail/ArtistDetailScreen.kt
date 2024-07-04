@@ -72,6 +72,7 @@ fun ArtistDetailScreen(
         viewModel.initViewModel(artistId)
     }
 
+
     val artist by viewModel.artist.collectAsState()
     val albums by viewModel.artistAlbums.collectAsState()
     val relatedArtists by viewModel.relatedArtists.collectAsState()

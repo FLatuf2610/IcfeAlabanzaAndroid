@@ -316,40 +316,44 @@ fun ArtistsList(list: List<ArtistListItem>, title: String, onClick: (ArtistListI
 }
 
 @Composable
-fun BottomSheetContentSong(
+fun TrackBottomSheetContent(
     songListItem: SongListItem?,
     webViewLyrics: (SongListItem) -> Unit,
     webViewNotes: (SongListItem) -> Unit,
+    onAddToReu: (SongListItem) -> Unit,
     editMode: Boolean,
-    onDeleteFromReu: (SongListItem) -> Unit
+    onDeleteFromReu: ((SongListItem) -> Unit)? = null
 ) {
     Column(
         modifier = Modifier.padding(8.dp)
     ) {
-        BottomSheetRowItem(
-            item = songListItem!!,
-            onClick = { webViewLyrics(it) },
-            action = "Buscar Letra",
-            icon = Icons.Default.Search,
-        )
-        BottomSheetRowItem(
-            item = songListItem,
-            onClick = { webViewNotes(it) },
-            action = "Buscar Notas",
-            icon = Icons.Default.Search
-        )
-        BottomSheetRowItem(
-            item = songListItem,
-            onClick = {  },
-            action = "Agregar a reu",
-            icon = Icons.Default.Add)
-        if (editMode) {
+        if (songListItem != null) {
+            TrackItemSM(track = songListItem, onClick = {})
             BottomSheetRowItem(
                 item = songListItem,
-                onClick = { onDeleteFromReu(it) },
-                action = "Eliminar de la reu",
-                icon = Icons.Outlined.Delete
+                onClick = { webViewLyrics(it) },
+                action = "Buscar Letra",
+                icon = Icons.Default.Search,
             )
+            BottomSheetRowItem(
+                item = songListItem,
+                onClick = { webViewNotes(it) },
+                action = "Buscar Notas",
+                icon = Icons.Default.Search
+            )
+            BottomSheetRowItem(
+                item = songListItem,
+                onClick = { onAddToReu(songListItem) },
+                action = "Agregar a reu",
+                icon = Icons.Default.Add)
+            if (editMode && onDeleteFromReu != null) {
+                BottomSheetRowItem(
+                    item = songListItem,
+                    onClick = { onDeleteFromReu(it) },
+                    action = "Eliminar de la reu",
+                    icon = Icons.Outlined.Delete
+                )
+            }
         }
     }
 }
@@ -376,15 +380,25 @@ fun BottomSheetRowItem(
 }
 
 @Composable
-fun AddBottomSheetContent(reus: List<Reunion>, onClick: (Reunion) -> Unit, getReus: () -> Unit) {
+fun AddBottomSheetContent(reus: List<Reunion>?, onClick: (Reunion) -> Unit, getReus: () -> Unit) {
     LaunchedEffect(key1 = Unit) { getReus() }
-    LazyColumn(
-        Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.7f)
-    ) {
-        items(reus) { reu ->
-            ReuItemSM(reu = reu, onClick = { onClick(it) })
+    if (reus == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.6f)
+        ) {
+            CircularProgressIndicator(Modifier.align(Alignment.Center))
+        }
+    } else {
+        LazyColumn(
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.6f)
+        ) {
+            items(reus) { reu ->
+                ReuItemSM(reu = reu, onClick = { onClick(it) })
+            }
         }
     }
 }
