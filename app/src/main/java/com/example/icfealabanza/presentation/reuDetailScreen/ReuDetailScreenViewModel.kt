@@ -9,10 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.icfealabanza.data.repository.IcfeRepositoryImpl
 import com.example.icfealabanza.domain.models.Reunion
 import com.example.icfealabanza.domain.models.SongListItem
-import com.example.icfealabanza.domain.use_cases.AddToReuUseCase
 import com.example.icfealabanza.domain.use_cases.DeleteReuUseCase
 import com.example.icfealabanza.domain.use_cases.SearchSongsUseCase
-import com.example.icfealabanza.presentation.search.SearchState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -27,7 +25,6 @@ class ReuDetailScreenViewModel @Inject constructor(
     private val repositoryImpl: IcfeRepositoryImpl,
     private val deleteReuUseCase: DeleteReuUseCase,
     private val searchSongsUseCase: SearchSongsUseCase,
-    private val addToReuUseCase: AddToReuUseCase
 ): ViewModel() {
 
     var reu by mutableStateOf<Reunion?>(null)

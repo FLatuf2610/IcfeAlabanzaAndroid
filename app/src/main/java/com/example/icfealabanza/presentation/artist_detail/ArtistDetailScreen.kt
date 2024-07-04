@@ -55,8 +55,11 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.icfealabanza.domain.models.AlbumListItem
 import com.example.icfealabanza.domain.models.SongListItem
+import com.example.icfealabanza.presentation.global_components.AddBottomSheet
 import com.example.icfealabanza.presentation.global_components.AlbumItemMD
 import com.example.icfealabanza.presentation.global_components.ArtistsList
+import com.example.icfealabanza.presentation.global_components.TracksBottomSheet
+import com.example.icfealabanza.presentation.main.CommonViewModel
 import kotlinx.coroutines.Dispatchers
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -66,6 +69,7 @@ fun ArtistDetailScreen(
     artistId: String,
     viewModel: ArtistDetailViewModel,
     navController: NavController,
+    commonViewModel: CommonViewModel
 ) {
 
     LaunchedEffect(key1 = true) {
@@ -85,6 +89,7 @@ fun ArtistDetailScreen(
     val colorIcon = if (firstVisibleItem >= 1) Color.Transparent else Color.Black.copy(alpha = 0.2f)
     val colorI by animateColorAsState(targetValue = colorIcon, label = "")
     val title = if (firstVisibleItem < 1) "" else artist?.name ?: ""
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -123,8 +128,8 @@ fun ArtistDetailScreen(
                 }
                 artistTopSongs(
                     list = topSongs.take(5),
-                    onClick = {  },
-                    onButtonClick = { /*TODO: Navigate to Popular Screen*/ },
+                    onClick = { commonViewModel.showTrackBottomSheet(it) },
+                    onButtonClick = { navController.navigate("popular/${artistId}") },
                 )
                 artistAlbums(
                     list = albums,
@@ -144,8 +149,13 @@ fun ArtistDetailScreen(
                 }
             }
         }
-
-
+        TracksBottomSheet(
+            commonViewModel = commonViewModel,
+            navController = navController,
+            context = context,
+            editMode = false
+        )
+        AddBottomSheet(commonViewModel = commonViewModel)
     }
 }
 

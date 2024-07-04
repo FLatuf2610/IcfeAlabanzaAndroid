@@ -16,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AlbumDetailViewModel @Inject constructor(private val getAlbumByIdUseCase: GetAlbumByIdUseCase): ViewModel() {
 
-    var albumId = ""
+    private var albumId = ""
     var album = MutableStateFlow<AlbumDetail?>(null)
         private set
     var isLoading by mutableStateOf(false)

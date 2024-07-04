@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,13 +22,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -38,7 +33,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,9 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.example.icfealabanza.domain.models.SongListItem
-import com.example.icfealabanza.presentation.global_components.AddBottomSheetContent
-import com.example.icfealabanza.presentation.global_components.TrackBottomSheetContent
+import com.example.icfealabanza.presentation.global_components.AddBottomSheet
 import com.example.icfealabanza.presentation.global_components.TrackItemSM
+import com.example.icfealabanza.presentation.global_components.TracksBottomSheet
 import com.example.icfealabanza.presentation.main.CommonViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,16 +56,10 @@ fun ReuDetailScreen(reuId: String,
                     commonViewModel: CommonViewModel) {
 
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(key1 = reuId) {
         viewModel.getReuById(reuId)
     }
-    LaunchedEffect(key1 = commonViewModel.snackBarText) {
-        if (commonViewModel.snackBarText != null) {
-            snackbarHostState.showSnackbar(commonViewModel.snackBarText!!, "OK", duration = SnackbarDuration.Short)
-            commonViewModel.resetSnackBarText()
-        }
-    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -91,7 +79,6 @@ fun ReuDetailScreen(reuId: String,
                 }
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { pad ->
         if (viewModel.reu == null) {
             Box(
@@ -109,34 +96,22 @@ fun ReuDetailScreen(reuId: String,
                 }
             }
         }
-        if (commonViewModel.isTrackBottomSheetShowed) {
-            ModalBottomSheet(onDismissRequest = { commonViewModel.hideTrackBottomSheet() }) {
-                TrackBottomSheetContent(
-                    songListItem = commonViewModel.selectedTrack,
-                    webViewLyrics = { commonViewModel.navigateToLyrics(it, navController) },
-                    webViewNotes = { commonViewModel.navigateToNotes(it, context) },
-                    onAddToReu = {
-                        commonViewModel.showAddBottomSheet(it)
-                        commonViewModel.hideTrackBottomSheet()
-                    },
-                    editMode = true,
-                    onDeleteFromReu = {
-                        commonViewModel.hideTrackBottomSheet()
-                        commonViewModel.deleteTrack(reuId = reuId, it)
-                    }
-                )
+        TracksBottomSheet(
+            commonViewModel = commonViewModel,
+            navController = navController,
+            context = context,
+            editMode = true,
+            reuId = reuId
+        )
+        AddBottomSheet(commonViewModel = commonViewModel)
+        AddToReuBottomSheet(
+            viewModel = viewModel,
+            onClickTrack = {
+                viewModel.hideAddToReuBottomSheet()
+                commonViewModel.addToReu(reuId, it)
             }
-        }
-        if (commonViewModel.isAddBottomSheetShowed) {
-            ModalBottomSheet(onDismissRequest = { commonViewModel.hideAddBottomSheet() }) {
-                AddBottomSheetContent(reus = commonViewModel.reus,
-                    onClick = {
-                        commonViewModel.addToReu(it.id!!, commonViewModel.addBottomSheetTrack!!)
-                        commonViewModel.hideAddBottomSheet()
-                    },
-                    getReus = { commonViewModel.getSingleReus()  })
-            }
-        }
+        )
+
         if (viewModel.isDeleteDialogShowed) {
             AlertDialog(
                 onDismissRequest = { viewModel.hideDeleteDialog() },
@@ -164,18 +139,19 @@ fun ReuDetailScreen(reuId: String,
                 }
             )
         }
-        if (viewModel.isAddToReuBottomSheetShowed) {
-            ModalBottomSheet(
-                onDismissRequest = { viewModel.hideAddToReuBottomSheet() },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            ) {
-                AddToReuBottomSheetContent(viewModel, onClickTrack = {
-                    viewModel.hideAddToReuBottomSheet()
-                    commonViewModel.addToReu(reuId, it)
-                } )
-            }
-        }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddToReuBottomSheet(viewModel: ReuDetailScreenViewModel, onClickTrack: (SongListItem) -> Unit) {
+    if (viewModel.isAddToReuBottomSheetShowed)
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.hideAddToReuBottomSheet() },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            AddToReuBottomSheetContent(viewModel, onClickTrack = { onClickTrack(it) } )
+        }
 }
 
 @Composable
@@ -184,9 +160,11 @@ fun AddToReuBottomSheetContent(viewModel: ReuDetailScreenViewModel, onClickTrack
     var query by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     val lazyListState = rememberLazyListState()
+
     LaunchedEffect(key1 = lazyListState.isScrollInProgress) {
         if (lazyListState.isScrollInProgress && keyboardController != null) keyboardController.hide()
     }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -212,5 +190,5 @@ fun AddToReuBottomSheetContent(viewModel: ReuDetailScreenViewModel, onClickTrack
             }
         }
     }
-    
+
 }

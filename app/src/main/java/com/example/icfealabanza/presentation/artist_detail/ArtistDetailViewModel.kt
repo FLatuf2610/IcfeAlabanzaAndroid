@@ -26,7 +26,7 @@ class ArtistDetailViewModel @Inject constructor(
     private val getAlbumsFromArtist: GetAlbumsFromArtist
 ) : ViewModel() {
 
-    var artistId = ""
+    private var artistId = ""
     var artist = MutableStateFlow<ArtistListItem?>(null)
         private set
     var isLoadingState by mutableStateOf(false)
@@ -58,7 +58,7 @@ class ArtistDetailViewModel @Inject constructor(
         artist.value = getArtistByIdUseCase(id)
     }
 
-    suspend fun getTopSongs(id: String, limit: Int = 5,index: Int = 0) {
+    private suspend fun getTopSongs(id: String, limit: Int = 5,index: Int = 0) {
         val topSongs = getArtistTopSongs(id = id, limit = limit,index = index)
         if (index != 0) {
             val aux = artistTopSongs.value.toMutableList()
@@ -68,7 +68,7 @@ class ArtistDetailViewModel @Inject constructor(
         else artistTopSongs.value = topSongs
     }
 
-    fun getRelatedArtists(id: String, index: Int = 0) {
+    private fun getRelatedArtists(id: String, index: Int = 0) {
         viewModelScope.launch {
             val result = getRelatedArtistsUseCase(id, index)
             relatedArtists.value = result

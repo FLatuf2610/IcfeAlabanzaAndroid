@@ -20,19 +20,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,11 +39,11 @@ import androidx.navigation.NavHostController
 import com.example.icfealabanza.domain.models.AlbumListItem
 import com.example.icfealabanza.domain.models.ArtistListItem
 import com.example.icfealabanza.domain.models.SongListItem
-import com.example.icfealabanza.presentation.global_components.AddBottomSheetContent
+import com.example.icfealabanza.presentation.global_components.AddBottomSheet
 import com.example.icfealabanza.presentation.global_components.AlbumItemSM
 import com.example.icfealabanza.presentation.global_components.ArtistItemSM
-import com.example.icfealabanza.presentation.global_components.TrackBottomSheetContent
 import com.example.icfealabanza.presentation.global_components.TrackItemSM
+import com.example.icfealabanza.presentation.global_components.TracksBottomSheet
 import com.example.icfealabanza.presentation.main.CommonViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -59,20 +54,11 @@ fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController, c
     val lazyListState = rememberLazyListState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(key1 = lazyListState.isScrollInProgress) {
         if (lazyListState.isScrollInProgress && keyboardController != null) keyboardController.hide()
     }
-    LaunchedEffect(key1 = commonViewModel.snackBarText) {
-        if (commonViewModel.snackBarText != null) {
-            snackbarHostState.showSnackbar(commonViewModel.snackBarText!!, "OK", duration = SnackbarDuration.Short)
-            commonViewModel.resetSnackBarText()
-        }
-    }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) {
+    Scaffold {
 
         Box(
             modifier = Modifier.fillMaxSize()
@@ -151,30 +137,13 @@ fun SearchScreen(viewModel: SearchViewModel, navController: NavHostController, c
                             )
                         }
                     }
-                    if (commonViewModel.isTrackBottomSheetShowed) {
-                        ModalBottomSheet(onDismissRequest = { commonViewModel.hideTrackBottomSheet() }) {
-                            TrackBottomSheetContent(
-                                songListItem = commonViewModel.selectedTrack,
-                                webViewLyrics = { commonViewModel.navigateToLyrics(it, navController) },
-                                webViewNotes = { commonViewModel.navigateToNotes(it, context) },
-                                onAddToReu = {
-                                    commonViewModel.showAddBottomSheet(it)
-                                    commonViewModel.hideTrackBottomSheet()
-                                },
-                                editMode = false
-                            )
-                        }
-                    }
-                    if (commonViewModel.isAddBottomSheetShowed) {
-                        ModalBottomSheet(onDismissRequest = { commonViewModel.hideAddBottomSheet() }) {
-                            AddBottomSheetContent(reus = commonViewModel.reus,
-                                onClick = {
-                                    commonViewModel.addToReu(it.id!!, commonViewModel.addBottomSheetTrack!!)
-                                    commonViewModel.hideAddBottomSheet()
-                                },
-                                getReus = { commonViewModel.getSingleReus()  })
-                        }
-                    }
+                    TracksBottomSheet(
+                        commonViewModel = commonViewModel,
+                        navController = navController,
+                        context = context,
+                        editMode = false
+                    )
+                    AddBottomSheet(commonViewModel = commonViewModel)
                 } else {
                     Column(
                         modifier = Modifier

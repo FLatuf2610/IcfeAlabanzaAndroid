@@ -1,4 +1,4 @@
-package com.example.icfealabanza
+package com.example.icfealabanza.application
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

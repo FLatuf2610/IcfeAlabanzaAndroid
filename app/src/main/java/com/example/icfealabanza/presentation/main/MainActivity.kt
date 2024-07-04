@@ -19,11 +19,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -39,6 +41,8 @@ import com.example.icfealabanza.presentation.album_detail.AlbumDetailScreen
 import com.example.icfealabanza.presentation.album_detail.AlbumDetailViewModel
 import com.example.icfealabanza.presentation.artist_detail.ArtistDetailScreen
 import com.example.icfealabanza.presentation.artist_detail.ArtistDetailViewModel
+import com.example.icfealabanza.presentation.artist_detail.popularScreen.PopularTracksScreen
+import com.example.icfealabanza.presentation.artist_detail.popularScreen.PopularTracksViewModel
 import com.example.icfealabanza.presentation.home.HomeScreen
 import com.example.icfealabanza.presentation.home.HomeViewModel
 import com.example.icfealabanza.presentation.reuDetailScreen.ReuDetailScreen
@@ -62,9 +66,17 @@ class MainActivity : ComponentActivity() {
             val homeViewModel: HomeViewModel = hiltViewModel()
             val reuDetailScreenViewModel: ReuDetailScreenViewModel = hiltViewModel()
             val artistDetailViewModel: ArtistDetailViewModel = hiltViewModel()
+            val popularTracksViewModel: PopularTracksViewModel = hiltViewModel()
             val albumDetailViewModel: AlbumDetailViewModel = hiltViewModel()
             val reusViewModel: ReusViewModel = hiltViewModel()
             val snackbarHostState = remember { SnackbarHostState() }
+
+            LaunchedEffect(key1 = commonViewModel.snackBarText) {
+                if (commonViewModel.snackBarText != null) {
+                    snackbarHostState.showSnackbar(commonViewModel.snackBarText!!, "OK", duration = SnackbarDuration.Short)
+                    commonViewModel.resetSnackBarText()
+                }
+            }
 
             IcfeAlabanzaTheme {
                 Surface(
@@ -113,7 +125,8 @@ class MainActivity : ComponentActivity() {
                                     AlbumDetailScreen(
                                         albumId = id,
                                         viewModel = albumDetailViewModel,
-                                        navController = navController
+                                        navController = navController,
+                                        commonViewModel = commonViewModel
                                     )
                                 }
                                 composable(
@@ -132,6 +145,26 @@ class MainActivity : ComponentActivity() {
                                         artistId = id,
                                         viewModel = artistDetailViewModel,
                                         navController = navController,
+                                        commonViewModel = commonViewModel
+                                    )
+                                }
+                                composable(
+                                    "popular/{id}",
+                                    arguments = listOf(navArgument("id") { type = NavType.StringType }),
+                                    enterTransition = {
+                                        slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400))
+                                    },
+                                    exitTransition = {
+                                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right)
+                                    },
+                                    popEnterTransition = { fadeIn() }
+                                    ) {
+                                    val id = it.arguments?.getString("id")!!
+                                    PopularTracksScreen(
+                                        viewModel = popularTracksViewModel,
+                                        artistId = id,
+                                        commonViewModel = commonViewModel,
+                                        navController = navController
                                     )
                                 }
                                 composable(

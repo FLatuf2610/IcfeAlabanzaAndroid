@@ -31,9 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,7 +44,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.icfealabanza.presentation.global_components.AddBottomSheet
 import com.example.icfealabanza.presentation.global_components.TrackItemSM
+import com.example.icfealabanza.presentation.global_components.TracksBottomSheet
+import com.example.icfealabanza.presentation.main.CommonViewModel
 import kotlinx.coroutines.Dispatchers
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +55,7 @@ import kotlinx.coroutines.Dispatchers
 @Composable
 fun AlbumDetailScreen(
     albumId: String,
+    commonViewModel: CommonViewModel,
     viewModel: AlbumDetailViewModel,
     navController: NavController
 ) {
@@ -70,6 +72,7 @@ fun AlbumDetailScreen(
     val colorIcon = if (firstVisibleItem >= 1) Color.Transparent else Color.Black.copy(alpha = 0.2f)
     val colorI by animateColorAsState(targetValue = colorIcon, label = "")
     val title = if (firstVisibleItem < 1) "" else album?.title ?: ""
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -106,9 +109,16 @@ fun AlbumDetailScreen(
                     AlbumHeader(name = album?.title ?: "", image = album?.cover ?:"")
                 }
                 items(album?.tracks ?: emptyList()) { track ->
-                    TrackItemSM(track = track, onClick = {  })
+                    TrackItemSM(track = track, onClick = { commonViewModel.showTrackBottomSheet(it) })
                 }
             }
+            TracksBottomSheet(
+                commonViewModel = commonViewModel,
+                navController = navController,
+                context = context,
+                editMode = false
+            )
+            AddBottomSheet(commonViewModel = commonViewModel)
         }
     }
 }

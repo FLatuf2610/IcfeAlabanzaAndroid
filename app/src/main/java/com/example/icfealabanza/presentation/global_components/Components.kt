@@ -1,5 +1,6 @@
 package com.example.icfealabanza.presentation.global_components
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +24,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,12 +42,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.icfealabanza.domain.models.AlbumListItem
 import com.example.icfealabanza.domain.models.ArtistListItem
 import com.example.icfealabanza.domain.models.Reunion
 import com.example.icfealabanza.domain.models.SongListItem
+import com.example.icfealabanza.presentation.main.CommonViewModel
 import kotlinx.coroutines.Dispatchers
 
 
@@ -315,6 +320,24 @@ fun ArtistsList(list: List<ArtistListItem>, title: String, onClick: (ArtistListI
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TracksBottomSheet(commonViewModel: CommonViewModel, navController: NavController, context: Context, editMode: Boolean, reuId: String? = null) {
+    if (commonViewModel.isTrackBottomSheetShowed)
+        ModalBottomSheet(onDismissRequest = { commonViewModel.hideTrackBottomSheet() }) {
+            TrackBottomSheetContent(
+                songListItem = commonViewModel.selectedTrack,
+                webViewLyrics = { commonViewModel.navigateToLyrics(it, navController) },
+                webViewNotes = { commonViewModel.navigateToNotes(it, context) },
+                onAddToReu = {
+                    commonViewModel.hideTrackBottomSheet()
+                    commonViewModel.showAddBottomSheet(it) },
+                editMode = editMode,
+                onDeleteFromReu = { commonViewModel.hideTrackBottomSheet()
+                    commonViewModel.deleteTrack(reuId = reuId!!, it) }
+            )
+        }
+}
 @Composable
 fun TrackBottomSheetContent(
     songListItem: SongListItem?,
@@ -377,6 +400,23 @@ fun BottomSheetRowItem(
             Text(text = action)
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddBottomSheet(commonViewModel: CommonViewModel) {
+    if (commonViewModel.isAddBottomSheetShowed)
+        ModalBottomSheet(onDismissRequest = { commonViewModel.hideAddBottomSheet() }) {
+            AddBottomSheetContent(
+                reus = commonViewModel.reus,
+                onClick = {
+                    commonViewModel.addToReu(it.id!!, commonViewModel.addBottomSheetTrack!!)
+                    commonViewModel.hideAddBottomSheet()
+                },
+                getReus = { commonViewModel.getSingleReus() }
+            )
+        }
+
 }
 
 @Composable
